@@ -65,7 +65,8 @@ class ClientController extends Controller
 
         $data = $this->validated($request);
 
-        $request->user()->clients()->create($data);
+        $client = $request->user()->clients()->create($data);
+        $client->linkPortalUserByEmail();
 
         return back()->with('status', 'Client added.');
     }
@@ -75,6 +76,7 @@ class ClientController extends Controller
         $this->authorize('update', $client);
 
         $client->update($this->validated($request));
+        $client->linkPortalUserByEmail();
 
         return back()->with('status', 'Client updated.');
     }

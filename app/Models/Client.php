@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ClientStatus;
+use App\Enums\UserRole;
 use Carbon\CarbonImmutable;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -86,5 +87,24 @@ class Client extends Model
     public function isInvited(): bool
     {
         return $this->client_user_id !== null;
+    }
+
+    /**
+     * Link this client to an existing portal (client-role) user with the same email.
+     */
+    public function linkPortalUserByEmail(): void
+    {
+        if ($this->email === null || $this->client_user_id !== null) {
+            return;
+        }
+
+        $user = User::query()
+            ->where('email', $this->email)
+            ->where('role', UserRole::Client->value)
+            ->first();
+
+        if ($user !== null) {
+            $this->update(['client_user_id' => $user->id]);
+        }
     }
 }

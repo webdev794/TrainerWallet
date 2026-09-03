@@ -38,10 +38,26 @@ const variant: Record<
     void: 'outline',
 };
 
-export default function PortalIndex({ invoices }: { invoices: InvoiceRow[] }) {
+export default function PortalIndex({
+    invoices,
+    linked = true,
+}: {
+    invoices: InvoiceRow[];
+    linked?: boolean;
+}) {
     return (
         <ClientPortalLayout title="Your invoices">
             <Head title="Invoices" />
+
+            {!linked && (
+                <Card className="mb-4">
+                    <CardContent className="text-muted-foreground py-6 text-center text-sm">
+                        Your account isn&rsquo;t linked to a trainer yet. Ask
+                        your trainer to add you as a client using this email
+                        address, and your invoices will appear here.
+                    </CardContent>
+                </Card>
+            )}
 
             <Card>
                 <CardContent className="p-0">

@@ -41,13 +41,14 @@ class ClientImportController extends Controller
                 continue;
             }
 
-            $trainer->clients()->create([
+            $client = $trainer->clients()->create([
                 'name' => $name,
                 'email' => ($record['email'] ?? null) ?: null,
                 'phone' => ($record['phone'] ?? null) ?: null,
                 'default_rate' => is_numeric($record['rate'] ?? null) ? $record['rate'] : null,
                 'status' => ClientStatus::Active,
             ]);
+            $client->linkPortalUserByEmail();
 
             $imported++;
         }

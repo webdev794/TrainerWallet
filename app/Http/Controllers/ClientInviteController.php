@@ -30,7 +30,16 @@ class ClientInviteController extends Controller
             return back()->with('status', 'This client already has a portal account.');
         }
 
-        if (User::query()->where('email', $client->email)->exists()) {
+        $existing = User::query()->where('email', $client->email)->first();
+
+        if ($existing !== null) {
+            if ($existing->isClient()) {
+                // They already self-registered — just connect the records.
+                $client->update(['client_user_id' => $existing->id]);
+
+                return back()->with('status', 'This client already has an account — linked to your records.');
+            }
+
             throw ValidationException::withMessages([
                 'email' => 'An account already exists for that email address.',
             ]);

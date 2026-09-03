@@ -63,6 +63,10 @@ function initials(name: string) {
         .toUpperCase();
 }
 
+function logoutNow() {
+    router.post(logout.url());
+}
+
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     const { url } = usePage();
 
@@ -114,8 +118,16 @@ export default function AppLayout({
                     </Link>
                 </div>
                 <SidebarNav />
-                <div className="text-sidebar-muted border-t border-white/10 p-4 text-xs">
-                    {trainerProfile?.business_name}
+                <div className="space-y-2 border-t border-white/10 p-3">
+                    <div className="text-sidebar-muted px-2 text-xs">
+                        {trainerProfile?.business_name ?? user?.name}
+                    </div>
+                    <button
+                        onClick={logoutNow}
+                        className="text-sidebar-muted hover:text-sidebar-foreground flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm font-medium transition-colors hover:bg-white/5"
+                    >
+                        <LogOut className="size-4" /> Log out
+                    </button>
                 </div>
             </aside>
 
@@ -138,6 +150,14 @@ export default function AppLayout({
                             <SidebarNav
                                 onNavigate={() => setMobileOpen(false)}
                             />
+                            <div className="border-t border-white/10 p-3">
+                                <button
+                                    onClick={logoutNow}
+                                    className="text-sidebar-muted hover:text-sidebar-foreground flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm font-medium hover:bg-white/5"
+                                >
+                                    <LogOut className="size-4" /> Log out
+                                </button>
+                            </div>
                         </SheetContent>
                     </Sheet>
 
@@ -195,9 +215,10 @@ export default function AppLayout({
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        onSelect={() =>
-                                            router.post(logout.url())
-                                        }
+                                        onSelect={(event) => {
+                                            event.preventDefault();
+                                            logoutNow();
+                                        }}
                                     >
                                         <LogOut /> Log out
                                     </DropdownMenuItem>

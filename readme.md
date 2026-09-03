@@ -52,9 +52,19 @@ composer run dev     # server + queue + vite + logs, concurrently
 
 | Who | Credentials | Lands on |
 | --- | --- | --- |
-| Demo trainer (seeded, Pro plan, full data) | `trainer@coachpay.test` / `password` | `/dashboard` |
-| New trainer | register at `/register` (always a trainer, Free plan) | `/onboarding` |
-| Client | invited from **Clients → invite**, sets a password via emailed link | `/portal` |
+| **Demo trainer** — seeded, Pro plan, 4 clients, sessions, paid + open invoices, a recurring schedule | `trainer@coachpay.test` / `password` | `/dashboard` |
+| **Demo client** — seeded, linked to the trainer's "Arjun Mehta" record, 1 paid + 1 open invoice | `client@coachpay.test` / `password` | `/portal` |
+| New trainer | `/register` → choose **"I'm a trainer"** (Free plan) | `/onboarding` |
+| New client | `/register` → choose **"I'm a client"** (use the email the trainer has on file) | `/portal` |
+| Invited client | trainer clicks **invite** on the Clients screen → client sets a password via emailed link | `/portal` |
+
+Both demo accounts have `password` as the password and are created by
+`php artisan migrate:fresh --seed` (see `database/seeders/DemoSeeder.php`).
+
+The `/register` form has a trainer/client toggle. A client account is matched to a
+trainer's client record by email: whichever happens first — the client self-registers, or
+the trainer adds/imports/invites them — the two records are linked automatically. Until
+linked, the portal shows a "ask your trainer to add you" notice.
 
 Emails use `MAIL_MAILER=log` in dev — the invoice / receipt / reminder / invite messages
 land in `storage/logs/laravel.log`. Point `MAIL_*` at Mailtrap to preview them rendered.
@@ -100,7 +110,7 @@ npm run build
 
 | Route | Page | Notes |
 | --- | --- | --- |
-| `/register` | `auth/register` | Trainer sign-up; creates the `User` + `TrainerProfile` in a transaction |
+| `/register` | `auth/register` | Sign-up with a **trainer / client** toggle. Trainer → creates `User` + `TrainerProfile`, goes to onboarding. Client → creates a client-role `User`, auto-links to any matching client record by email, goes to the portal. |
 | `/login` | `auth/login` | Email + password, "remember me", 5-attempt throttle |
 | `/forgot-password` | `auth/forgot-password` | Request a reset link |
 | `/reset-password/{token}` | `auth/reset-password` | Set a new password (also the client-invite "set password" flow) |

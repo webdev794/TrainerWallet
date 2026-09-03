@@ -48,7 +48,7 @@ class DemoSeeder extends Seeder
         ])->map(fn (array $data) => Package::create([...$data, 'trainer_id' => $trainer->id]));
 
         $clients = collect([
-            ['name' => 'Arjun Mehta', 'email' => 'arjun@example.com'],
+            ['name' => 'Arjun Mehta', 'email' => 'client@coachpay.test'],
             ['name' => 'Neha Gupta', 'email' => 'neha@example.com'],
             ['name' => 'Sam Fernandes', 'email' => 'sam@example.com'],
             ['name' => 'Ritu Kapoor', 'email' => null],
@@ -57,6 +57,15 @@ class DemoSeeder extends Seeder
             'email' => $data['email'],
             'default_rate' => 1200,
         ]));
+
+        // Give the first client a portal login.
+        $clientUser = User::factory()->create([
+            'name' => 'Arjun Mehta',
+            'email' => 'client@coachpay.test',
+            'password' => Hash::make('password'),
+            'role' => UserRole::Client,
+        ]);
+        $clients->first()->update(['client_user_id' => $clientUser->id]);
 
         $reminders = app(InvoiceReminderService::class);
 
@@ -117,5 +126,6 @@ class DemoSeeder extends Seeder
         ]);
 
         $this->command->info('Demo trainer: trainer@coachpay.test / password');
+        $this->command->info('Demo client:  client@coachpay.test  / password');
     }
 }

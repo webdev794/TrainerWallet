@@ -33,6 +33,7 @@ class PortalDashboardController extends Controller
 
         return Inertia::render('portal/index', [
             'invoices' => $invoices,
+            'linked' => $clientRecord !== null,
         ]);
     }
 }
