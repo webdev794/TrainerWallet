@@ -20,6 +20,18 @@ type SessionRow = {
     status: string;
     status_label: string;
     trainer_name: string;
+    invoiced: boolean;
+};
+
+const statusVariant: Record<
+    string,
+    'secondary' | 'success' | 'warning' | 'outline'
+> = {
+    scheduled: 'secondary',
+    completed: 'success',
+    postponed: 'warning',
+    cancelled: 'outline',
+    no_show: 'warning',
 };
 
 export default function PortalSessions({
@@ -45,6 +57,7 @@ export default function PortalSessions({
                                     <TableHead>Trainer</TableHead>
                                     <TableHead>Duration</TableHead>
                                     <TableHead>Status</TableHead>
+                                    <TableHead>Billing</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -60,9 +73,33 @@ export default function PortalSessions({
                                             {row.duration_minutes} min
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="secondary">
+                                            <Badge
+                                                variant={
+                                                    statusVariant[row.status] ??
+                                                    'secondary'
+                                                }
+                                            >
                                                 {row.status_label}
                                             </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            {row.status === 'completed' ? (
+                                                <Badge
+                                                    variant={
+                                                        row.invoiced
+                                                            ? 'outline'
+                                                            : 'secondary'
+                                                    }
+                                                >
+                                                    {row.invoiced
+                                                        ? 'Invoiced'
+                                                        : 'Not yet invoiced'}
+                                                </Badge>
+                                            ) : (
+                                                <span className="text-muted-foreground text-xs">
+                                                    —
+                                                </span>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 ))}

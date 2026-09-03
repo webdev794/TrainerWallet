@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\InvoiceReminderService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -68,19 +69,36 @@ class DemoSeeder extends Seeder
         $clients->first()->update(['client_user_id' => $clientUser->id]);
 
         $reminders = app(InvoiceReminderService::class);
+        $rate = 1200;
 
         foreach ($clients as $index => $client) {
-            TrainingSession::factory()->count(6)->forClient($client)->create([
+            // Completed sessions: 4 go on the paid invoice, 2 on the open invoice,
+            // 2 stay unbilled (to demo "create invoice from sessions").
+            $completed = TrainingSession::factory()->count(8)->forClient($client)->create([
                 'status' => SessionStatus::Completed,
                 'scheduled_at' => fn () => CarbonImmutable::now()->subDays(random_int(1, 40)),
-                'rate' => 1200,
-            ]);
-            TrainingSession::factory()->count(2)->forClient($client)->create([
+                'rate' => $rate,
+            ])->values();
+
+            // Upcoming + a couple of non-completed outcomes for status variety.
+            TrainingSession::factory()->count(3)->forClient($client)->create([
                 'status' => SessionStatus::Scheduled,
-                'scheduled_at' => fn () => CarbonImmutable::now()->addDays(random_int(1, 10)),
+                'scheduled_at' => fn () => CarbonImmutable::now()->addDays(random_int(1, 12)),
+                'rate' => $rate,
+            ]);
+            TrainingSession::factory()->forClient($client)->create([
+                'status' => SessionStatus::Postponed,
+                'scheduled_at' => CarbonImmutable::now()->addDays(4),
+                'rate' => $rate,
+                'notes' => 'Client travelling — rescheduling next week.',
+            ]);
+            TrainingSession::factory()->forClient($client)->create([
+                'status' => SessionStatus::Cancelled,
+                'scheduled_at' => CarbonImmutable::now()->subDays(6),
+                'rate' => $rate,
             ]);
 
-            // A paid invoice.
+            // A paid invoice built from the first 4 completed sessions.
             $paid = Invoice::factory()->forClient($client)->create([
                 'number' => 'PSS-'.str_pad((string) ($index * 3 + 1), 4, '0', STR_PAD_LEFT),
                 'status' => InvoiceStatus::Paid,
@@ -88,9 +106,7 @@ class DemoSeeder extends Seeder
                 'due_date' => CarbonImmutable::now()->subDays(23)->toDateString(),
                 'paid_at' => CarbonImmutable::now()->subDays(25),
             ]);
-            $paid->items()->create(['description' => '4 sessions', 'quantity' => 4, 'unit_amount' => 1200, 'amount' => 4800]);
-            $paid->load('items');
-            $paid->recalculateTotals();
+            $this->attachSessions($paid, $completed->slice(0, 4), $rate);
             $paid->amount_paid = $paid->total;
             $paid->save();
             $paid->payments()->create([
@@ -105,17 +121,14 @@ class DemoSeeder extends Seeder
                 'idempotency_key' => Str::uuid()->toString(),
             ]);
 
-            // An open invoice (some overdue).
+            // An open invoice from the next 2 completed sessions (alternating overdue).
             $open = Invoice::factory()->forClient($client)->create([
                 'number' => 'PSS-'.str_pad((string) ($index * 3 + 2), 4, '0', STR_PAD_LEFT),
                 'status' => InvoiceStatus::Sent,
                 'issued_at' => CarbonImmutable::now()->subDays(8),
                 'due_date' => CarbonImmutable::now()->addDays($index % 2 === 0 ? 5 : -3)->toDateString(),
             ]);
-            $open->items()->create(['description' => 'Monthly unlimited', 'quantity' => 1, 'unit_amount' => 8000, 'amount' => 8000]);
-            $open->load('items');
-            $open->recalculateTotals();
-            $open->save();
+            $this->attachSessions($open, $completed->slice(4, 2), $rate);
             $reminders->schedule($open->fresh());
         }
 
@@ -127,5 +140,28 @@ class DemoSeeder extends Seeder
 
         $this->command->info('Demo trainer: trainer@coachpay.test / password');
         $this->command->info('Demo client:  client@coachpay.test  / password');
+    }
+
+    /**
+     * Attach completed sessions to an invoice as line items and recalc totals.
+     *
+     * @param  Collection<int, TrainingSession>  $sessions
+     */
+    private function attachSessions(Invoice $invoice, Collection $sessions, int $rate): void
+    {
+        foreach ($sessions as $session) {
+            $invoice->items()->create([
+                'description' => 'Training session — '.$session->scheduled_at->format('d M'),
+                'quantity' => 1,
+                'unit_amount' => $rate,
+                'amount' => $rate,
+                'training_session_id' => $session->id,
+            ]);
+            $session->update(['invoice_id' => $invoice->id]);
+        }
+
+        $invoice->load('items');
+        $invoice->recalculateTotals();
+        $invoice->save();
     }
 }

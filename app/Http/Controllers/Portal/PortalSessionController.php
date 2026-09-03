@@ -27,6 +27,7 @@ class PortalSessionController extends Controller
                 'status' => $session->status->value,
                 'status_label' => $session->status->label(),
                 'trainer_name' => $session->trainer->name,
+                'invoiced' => $session->invoice_id !== null,
             ]);
 
         return Inertia::render('portal/sessions', [

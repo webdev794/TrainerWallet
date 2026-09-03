@@ -72,6 +72,7 @@ const statusVariant: Record<
 > = {
     scheduled: 'secondary',
     completed: 'success',
+    postponed: 'warning',
     cancelled: 'outline',
     no_show: 'warning',
 };
@@ -229,6 +230,7 @@ function SessionDialog({
                             >
                                 <option value="scheduled">Scheduled</option>
                                 <option value="completed">Completed</option>
+                                <option value="postponed">Postponed</option>
                                 <option value="cancelled">Cancelled</option>
                                 <option value="no_show">No-show</option>
                             </Select>

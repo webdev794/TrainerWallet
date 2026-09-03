@@ -53,7 +53,7 @@ composer run dev     # server + queue + vite + logs, concurrently
 | Who | Credentials | Lands on |
 | --- | --- | --- |
 | **Demo trainer** — seeded, Pro plan, 4 clients, sessions, paid + open invoices, a recurring schedule | `trainer@coachpay.test` / `password` | `/dashboard` |
-| **Demo client** — seeded, linked to the trainer's "Arjun Mehta" record, 1 paid + 1 open invoice | `client@coachpay.test` / `password` | `/portal` |
+| **Demo client** — seeded, linked to "Arjun Mehta"; 1 paid + 1 open invoice (both built from sessions), 8 completed sessions (6 invoiced / 2 not yet), plus scheduled / postponed / cancelled sessions | `client@coachpay.test` / `password` | `/portal` |
 | New trainer | `/register` → choose **"I'm a trainer"** (Free plan) | `/onboarding` |
 | New client | `/register` → choose **"I'm a client"** (use the email the trainer has on file) | `/portal` |
 | Invited client | trainer clicks **invite** on the Clients screen → client sets a password via emailed link | `/portal` |
@@ -124,7 +124,7 @@ npm run build
 | `/dashboard` | `dashboard` | KPI cards (collected this month, outstanding, overdue count, sessions this week) + recent invoices table |
 | `/clients` | `clients/index` | Directory table with search + status filter + pagination; add/edit drawer; CSV import; "invite to portal"; delete |
 | `/packages` | `packages/index` | Reusable billing packages (single / pack / monthly) — list + add/edit dialog |
-| `/sessions` | `sessions/index` | Month calendar **and** list tabs; log/edit a session; click a day to add one; status (scheduled / completed / cancelled / no-show) |
+| `/sessions` | `sessions/index` | Month calendar **and** list tabs; log/edit a session; click a day to add one; status dropdown: scheduled / completed / postponed / cancelled / no-show |
 | `/invoices` | `invoices/index` | All invoices, status filter, row → detail |
 | `/invoices/create`, `/invoices/{id}/edit` | `invoices/create` | Invoice builder — client, line items (manual, from a package, or from unbilled completed sessions), discount, tax rate, due date, allowed payment methods, notes; live totals |
 | `/invoices/{id}` | `invoices/show` | Invoice detail — send / resend, download PDF, copy public link, record a manual (cash / UPI) payment, confirm a pending payment, refund, void, delete draft; payment history |
@@ -140,7 +140,7 @@ npm run build
 | --- | --- | --- |
 | `/portal` | `portal/index` | The client's invoices — status, balance, "Pay" / "View" |
 | `/portal/invoices/{id}` | `invoice/public` | Same pay page as the public link, inside the portal shell |
-| `/portal/sessions` | `portal/sessions` | The client's past and upcoming sessions |
+| `/portal/sessions` | `portal/sessions` | The client's past and upcoming sessions, each with its status and whether a completed session has been invoiced yet |
 
 ### Layouts
 
