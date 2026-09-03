@@ -17,10 +17,12 @@ test('a client sees only their own sessions in the portal', function () {
         ->assertInertia(fn ($page) => $page->component('portal/sessions')->has('sessions', 2));
 });
 
-test('a trainer cannot access the client portal', function () {
+test('a trainer visiting the client portal is sent to their dashboard', function () {
     $trainer = User::factory()->trainer()->create();
 
-    $this->actingAs($trainer)->get(route('portal.index'))->assertForbidden();
+    $this->actingAs($trainer)
+        ->get(route('portal.index'))
+        ->assertRedirect(route('dashboard'));
 });
 
 test('a client is redirected to the portal after login', function () {

@@ -6,6 +6,7 @@ use App\Enums\InvoiceStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\InvoiceFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,8 +39,8 @@ use Illuminate\Support\Str;
  * @property CarbonImmutable|null $updated_at
  * @property-read Client $client
  * @property-read User $trainer
- * @property-read \Illuminate\Database\Eloquent\Collection<int, InvoiceItem> $items
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Payment> $payments
+ * @property-read Collection<int, InvoiceItem> $items
+ * @property-read Collection<int, Payment> $payments
  */
 class Invoice extends Model
 {
@@ -114,6 +115,14 @@ class Invoice extends Model
     public function trainingSessions(): HasMany
     {
         return $this->hasMany(TrainingSession::class);
+    }
+
+    /**
+     * @return HasMany<Reminder, $this>
+     */
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(Reminder::class);
     }
 
     public function outstanding(): float

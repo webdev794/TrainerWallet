@@ -72,8 +72,10 @@ test('clients can be filtered by search term', function () {
             ->where('clients.data.0.name', 'Priya Sharma'));
 });
 
-test('a client role cannot reach the clients screen', function () {
+test('a client role is redirected away from the clients screen', function () {
     $client = User::factory()->client()->create();
 
-    $this->actingAs($client)->get(route('clients.index'))->assertForbidden();
+    $this->actingAs($client)
+        ->get(route('clients.index'))
+        ->assertRedirect(route('portal.index'));
 });

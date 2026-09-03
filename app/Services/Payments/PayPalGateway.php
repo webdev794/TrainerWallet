@@ -6,6 +6,7 @@ use App\Enums\PaymentGatewayType;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\TrainerProfile;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -148,7 +149,7 @@ class PayPalGateway implements PaymentGateway
         return round($amount * (float) config('coachpay.platform_fee_percent', 0) / 100, 2);
     }
 
-    private function request(): \Illuminate\Http\Client\PendingRequest
+    private function request(): PendingRequest
     {
         return Http::baseUrl(config('services.paypal.base_url'))
             ->withToken($this->accessToken())

@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\InvoiceStatus;
-use App\Enums\SessionStatus;
 use App\Mail\InvoiceSentMail;
 use App\Models\Client;
 use App\Models\Invoice;

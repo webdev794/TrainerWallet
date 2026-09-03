@@ -7,7 +7,9 @@ import {
     LayoutDashboard,
     LogOut,
     Menu,
+    Repeat,
     Settings,
+    Sparkles,
     Users,
     Wallet,
 } from 'lucide-react';
@@ -44,8 +46,10 @@ const navItems: NavItem[] = [
     { label: 'Sessions', href: '/sessions', icon: CalendarDays },
     { label: 'Packages', href: '/packages', icon: Boxes },
     { label: 'Invoices', href: '/invoices', icon: FileText },
+    { label: 'Recurring', href: '/recurring', icon: Repeat },
     { label: 'Payments', href: '/payments', icon: CreditCard },
     { label: 'Reports', href: '/reports', icon: Wallet },
+    { label: 'Billing', href: '/billing', icon: Sparkles },
     { label: 'Settings', href: '/settings', icon: Settings },
 ];
 

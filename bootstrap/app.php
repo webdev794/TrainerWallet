@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnforceInvoiceQuota;
 use App\Http\Middleware\EnsureTrainerOnboarded;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'onboarded' => EnsureTrainerOnboarded::class,
             'role' => EnsureUserHasRole::class,
+            'quota' => EnforceInvoiceQuota::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

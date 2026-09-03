@@ -108,6 +108,24 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Recurring invoice schedules owned by this trainer.
+     *
+     * @return HasMany<RecurringInvoice, $this>
+     */
+    public function recurringInvoices(): HasMany
+    {
+        return $this->hasMany(RecurringInvoice::class, 'trainer_id');
+    }
+
+    /**
+     * @return HasMany<Subscription, $this>
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class, 'trainer_id');
+    }
+
+    /**
      * The client record linking this user (as a client) to a trainer.
      *
      * @return HasOne<Client, $this>

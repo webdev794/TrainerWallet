@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Invoice;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -38,7 +39,7 @@ class InvoiceSentMail extends Mailable
     }
 
     /**
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {
@@ -47,7 +48,7 @@ class InvoiceSentMail extends Mailable
         }
 
         return [
-            \Illuminate\Mail\Mailables\Attachment::fromStorageDisk('local', $this->invoice->pdf_path)
+            Attachment::fromStorageDisk('local', $this->invoice->pdf_path)
                 ->as("Invoice-{$this->invoice->number}.pdf")
                 ->withMime('application/pdf'),
         ];

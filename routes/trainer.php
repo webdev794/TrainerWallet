@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientImportController;
 use App\Http\Controllers\ClientInviteController;
@@ -7,6 +8,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\PackageController;
+use App\Http\Controllers\RecurringInvoiceController;
+use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\TrainingSessionController;
@@ -33,8 +36,8 @@ Route::middleware(['auth', 'verified', 'role:trainer', 'onboarded'])->group(func
     Route::delete('/sessions/{session}', [TrainingSessionController::class, 'destroy'])->name('sessions.destroy');
 
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-    Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
-    Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+    Route::get('/invoices/create', [InvoiceController::class, 'create'])->middleware('quota')->name('invoices.create');
+    Route::post('/invoices', [InvoiceController::class, 'store'])->middleware('quota')->name('invoices.store');
     Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
     Route::get('/invoices/{invoice}/edit', [InvoiceController::class, 'edit'])->name('invoices.edit');
     Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
@@ -52,4 +55,17 @@ Route::middleware(['auth', 'verified', 'role:trainer', 'onboarded'])->group(func
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::post('/settings/stripe/connect', [StripeConnectController::class, 'connect'])->name('settings.stripe.connect');
     Route::get('/settings/stripe/return', [StripeConnectController::class, 'return'])->name('settings.stripe.return');
+
+    Route::get('/recurring', [RecurringInvoiceController::class, 'index'])->name('recurring.index');
+    Route::post('/recurring', [RecurringInvoiceController::class, 'store'])->name('recurring.store');
+    Route::put('/recurring/{recurring}', [RecurringInvoiceController::class, 'update'])->name('recurring.update');
+    Route::delete('/recurring/{recurring}', [RecurringInvoiceController::class, 'destroy'])->name('recurring.destroy');
+    Route::post('/recurring/{recurring}/run', [RecurringInvoiceController::class, 'runNow'])->name('recurring.run');
+
+    Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
+    Route::get('/reports/payments.csv', [ReportsController::class, 'exportPayments'])->name('reports.payments.csv');
+
+    Route::get('/billing', [BillingController::class, 'show'])->name('billing.show');
+    Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
+    Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 });

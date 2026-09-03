@@ -104,23 +104,26 @@ class StripeGateway implements PaymentGateway
     {
         $secret = config('services.stripe.webhook_secret');
 
-        if ($secret) {
+        if (is_string($secret) && $secret !== '') {
             $event = Webhook::constructEvent(
                 $request->getContent(),
                 $request->header('Stripe-Signature', ''),
                 $secret,
             );
+            $type = (string) $event->type;
+            $eventId = (string) $event->id;
+            $object = $event->data->object->toArray();
         } else {
-            $event = (object) $request->json()->all();
+            $body = $request->json()->all();
+            $type = (string) ($body['type'] ?? '');
+            $eventId = (string) ($body['id'] ?? uniqid('evt_'));
+            $object = is_array($body['data']['object'] ?? null) ? $body['data']['object'] : [];
         }
 
-        $object = $event->data->object ?? [];
-        $object = is_array($object) ? $object : (array) $object;
-
-        return match ($event->type ?? '') {
+        return match ($type) {
             'checkout.session.completed' => new GatewayWebhookResult(
-                eventId: (string) $event->id,
-                type: (string) $event->type,
+                eventId: $eventId,
+                type: $type,
                 outcome: ($object['payment_status'] ?? null) === 'paid'
                     ? GatewayWebhookResult::OUTCOME_PAID
                     : GatewayWebhookResult::OUTCOME_IGNORED,
@@ -130,16 +133,16 @@ class StripeGateway implements PaymentGateway
                 payload: $object,
             ),
             'charge.refunded' => new GatewayWebhookResult(
-                eventId: (string) $event->id,
-                type: (string) $event->type,
+                eventId: $eventId,
+                type: $type,
                 outcome: GatewayWebhookResult::OUTCOME_REFUNDED,
                 gatewayOrderId: null,
                 gatewayPaymentId: $object['payment_intent'] ?? null,
                 payload: $object,
             ),
             default => new GatewayWebhookResult(
-                eventId: (string) ($event->id ?? uniqid('evt_')),
-                type: (string) ($event->type ?? 'unknown'),
+                eventId: $eventId,
+                type: $type !== '' ? $type : 'unknown',
                 outcome: GatewayWebhookResult::OUTCOME_IGNORED,
                 payload: $object,
             ),

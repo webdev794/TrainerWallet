@@ -3,6 +3,7 @@
 namespace App\Services\Payments;
 
 use App\Enums\PaymentGatewayType;
+use App\Models\TrainerProfile;
 use InvalidArgumentException;
 
 class PaymentGatewayManager
@@ -28,7 +29,7 @@ class PaymentGatewayManager
      *
      * @return array<int, PaymentGatewayType>
      */
-    public function availableFor(\App\Models\TrainerProfile $profile): array
+    public function availableFor(TrainerProfile $profile): array
     {
         $available = [];
 

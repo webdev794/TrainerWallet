@@ -16,7 +16,14 @@ class EnsureUserHasRole
     {
         $user = $request->user();
 
-        abort_if($user === null || $user->role !== UserRole::from($role), 403);
+        if ($user === null) {
+            abort(401);
+        }
+
+        if ($user->role !== UserRole::from($role)) {
+            // Send an authenticated user to their own area rather than a dead end.
+            return redirect($user->homePath());
+        }
 
         return $next($request);
     }

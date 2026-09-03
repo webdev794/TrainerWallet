@@ -6,11 +6,11 @@ use App\Enums\InvoiceStatus;
 use App\Enums\PaymentGatewayType;
 use App\Enums\SessionStatus;
 use App\Http\Requests\StoreInvoiceRequest;
-use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\TrainingSession;
 use App\Services\InvoiceDocumentService;
 use App\Services\InvoiceNumberService;
+use App\Services\InvoiceReminderService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +25,7 @@ class InvoiceController extends Controller
     public function __construct(
         private readonly InvoiceNumberService $numbers,
         private readonly InvoiceDocumentService $documents,
+        private readonly InvoiceReminderService $reminders,
     ) {}
 
     public function index(Request $request): Response
@@ -157,6 +158,7 @@ class InvoiceController extends Controller
             'issued_at' => $invoice->issued_at ?? CarbonImmutable::now(),
         ]);
 
+        $this->reminders->schedule($invoice->fresh());
         $this->documents->emailInvoiceToClient($invoice->fresh());
 
         return back()->with('status', $invoice->client->email

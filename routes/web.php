@@ -14,14 +14,18 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 });
 
 // Public, tokenised invoice + payment pages (no auth).
-Route::get('/i/{token}', [PublicInvoiceController::class, 'show'])->name('public-invoice.show');
-Route::post('/i/{token}/pay/{gateway}', [PublicPaymentController::class, 'start'])->name('public-invoice.pay');
-Route::get('/i/{token}/return/{payment}', [PublicPaymentController::class, 'return'])->name('public-invoice.return');
-Route::post('/i/{token}/upi', [PublicPaymentController::class, 'submitUpi'])->name('public-invoice.upi');
+Route::middleware('throttle:public-invoice')->group(function (): void {
+    Route::get('/i/{token}', [PublicInvoiceController::class, 'show'])->name('public-invoice.show');
+    Route::post('/i/{token}/pay/{gateway}', [PublicPaymentController::class, 'start'])->name('public-invoice.pay');
+    Route::get('/i/{token}/return/{payment}', [PublicPaymentController::class, 'return'])->name('public-invoice.return');
+    Route::post('/i/{token}/upi', [PublicPaymentController::class, 'submitUpi'])->name('public-invoice.upi');
+});
 
 // Gateway webhooks (CSRF-exempt, signature verified in the controller).
-Route::post('/webhooks/stripe', [WebhookController::class, 'stripe'])->name('webhooks.stripe');
-Route::post('/webhooks/paypal', [WebhookController::class, 'paypal'])->name('webhooks.paypal');
+Route::middleware('throttle:webhooks')->group(function (): void {
+    Route::post('/webhooks/stripe', [WebhookController::class, 'stripe'])->name('webhooks.stripe');
+    Route::post('/webhooks/paypal', [WebhookController::class, 'paypal'])->name('webhooks.paypal');
+});
 
 require __DIR__.'/trainer.php';
 require __DIR__.'/portal.php';
