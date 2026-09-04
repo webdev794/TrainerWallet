@@ -4,9 +4,14 @@ use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\Payments\PublicInvoiceController;
 use App\Http\Controllers\Payments\PublicPaymentController;
 use App\Http\Controllers\Payments\WebhookController;
+use App\Http\Controllers\TrainerDirectoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
+
+// Public trainer marketplace.
+Route::get('/trainers', [TrainerDirectoryController::class, 'index'])->name('trainers.index');
+Route::get('/t/{slug}', [TrainerDirectoryController::class, 'show'])->name('trainers.show');
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/onboarding', [OnboardingController::class, 'show'])->name('onboarding.show');

@@ -7,6 +7,7 @@ use Database\Factories\TrainerProfileFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
@@ -27,6 +28,13 @@ use Illuminate\Support\Str;
  * @property string $plan
  * @property CarbonImmutable|null $plan_renews_at
  * @property CarbonImmutable|null $onboarded_at
+ * @property bool $is_public
+ * @property string|null $slug
+ * @property string|null $headline
+ * @property string|null $bio
+ * @property string|null $city
+ * @property string $rating_avg
+ * @property int $rating_count
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
@@ -46,6 +54,9 @@ class TrainerProfile extends Model
             'next_invoice_number' => 'integer',
             'plan_renews_at' => 'datetime',
             'onboarded_at' => 'datetime',
+            'is_public' => 'boolean',
+            'rating_avg' => 'decimal:2',
+            'rating_count' => 'integer',
         ];
     }
 
@@ -55,6 +66,18 @@ class TrainerProfile extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Bookable packages this trainer publishes to the directory.
+     *
+     * @return HasMany<Package, $this>
+     */
+    public function bookablePackages(): HasMany
+    {
+        return $this->hasMany(Package::class, 'trainer_id', 'user_id')
+            ->where('is_active', true)
+            ->where('is_bookable', true);
     }
 
     public function isPro(): bool

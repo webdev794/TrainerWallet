@@ -15,9 +15,7 @@ class PortalInvoiceController extends Controller
 
     public function show(Request $request, Invoice $invoice): Response
     {
-        $clientRecord = $request->user()->clientRecord;
-
-        abort_if($clientRecord === null || $invoice->client_id !== $clientRecord->id, 403);
+        abort_unless(in_array($invoice->client_id, $request->user()->clientRecordIds(), true), 403);
 
         $invoice->load(['items', 'client:id,name,email', 'trainer.trainerProfile', 'payments' => fn ($q) => $q->latest()]);
 

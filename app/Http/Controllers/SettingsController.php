@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TrainerProfile;
 use App\Services\Payments\PaymentGatewayManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,6 +32,14 @@ class SettingsController extends Controller
                 'stripe_connect_status' => $profile->stripe_connect_status,
                 'stripe_connected' => $profile->stripe_connect_id !== null,
                 'paypal_merchant_id' => $profile->paypal_merchant_id,
+                'is_public' => $profile->is_public,
+                'slug' => $profile->slug,
+                'headline' => $profile->headline,
+                'bio' => $profile->bio,
+                'city' => $profile->city,
+                'rating_avg' => $profile->rating_avg,
+                'rating_count' => $profile->rating_count,
+                'public_url' => $profile->slug ? route('trainers.show', $profile->slug) : null,
             ],
             'connectedGateways' => array_map(
                 fn ($type): string => $type->value,
@@ -52,6 +62,10 @@ class SettingsController extends Controller
             'tax_id' => ['nullable', 'string', 'max:100'],
             'paypal_merchant_id' => ['nullable', 'string', 'max:100'],
             'logo' => ['nullable', 'image', 'max:2048'],
+            'is_public' => ['boolean'],
+            'headline' => ['nullable', 'string', 'max:160'],
+            'bio' => ['nullable', 'string', 'max:2000'],
+            'city' => ['nullable', 'string', 'max:120'],
         ]);
 
         $profile->fill([
@@ -62,7 +76,15 @@ class SettingsController extends Controller
             'address' => $validated['address'] ?? null,
             'tax_id' => $validated['tax_id'] ?? null,
             'paypal_merchant_id' => $validated['paypal_merchant_id'] ?? null,
+            'is_public' => $validated['is_public'] ?? false,
+            'headline' => $validated['headline'] ?? null,
+            'bio' => $validated['bio'] ?? null,
+            'city' => $validated['city'] ?? null,
         ]);
+
+        if (($validated['is_public'] ?? false) && $profile->slug === null) {
+            $profile->slug = $this->uniqueSlug($validated['business_name'], $profile->id);
+        }
 
         if ($request->hasFile('logo')) {
             $path = $request->file('logo')->store('logos', 'public');
@@ -75,5 +97,18 @@ class SettingsController extends Controller
         $profile->save();
 
         return back()->with('status', 'Settings saved.');
+    }
+
+    private function uniqueSlug(string $name, int $ignoreId): string
+    {
+        $base = Str::slug($name) ?: 'trainer';
+        $slug = $base;
+        $suffix = 1;
+
+        while (TrainerProfile::query()->where('slug', $slug)->where('id', '!=', $ignoreId)->exists()) {
+            $slug = $base.'-'.(++$suffix);
+        }
+
+        return $slug;
     }
 }

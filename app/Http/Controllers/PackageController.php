@@ -22,12 +22,15 @@ class PackageController extends Controller
             ->map(fn (Package $package): array => [
                 'id' => $package->id,
                 'name' => $package->name,
+                'description' => $package->description,
                 'type' => $package->type->value,
                 'type_label' => $package->type->label(),
                 'amount' => $package->amount,
                 'sessions_count' => $package->sessions_count,
                 'billing_interval' => $package->billing_interval,
+                'duration_minutes' => $package->duration_minutes,
                 'is_active' => $package->is_active,
+                'is_bookable' => $package->is_bookable,
             ]);
 
         return Inertia::render('packages/index', [
@@ -70,11 +73,14 @@ class PackageController extends Controller
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:1000'],
             'type' => ['required', Rule::enum(PackageType::class)],
             'amount' => ['required', 'numeric', 'min:0', 'max:100000000'],
             'sessions_count' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'billing_interval' => ['nullable', Rule::in(['week', 'month', 'quarter', 'year'])],
+            'duration_minutes' => ['nullable', 'integer', 'min:5', 'max:600'],
             'is_active' => ['boolean'],
+            'is_bookable' => ['boolean'],
         ]);
     }
 }

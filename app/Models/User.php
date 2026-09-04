@@ -126,13 +126,61 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * The client record linking this user (as a client) to a trainer.
+     * The client records linking this user (as a client) to one or more trainers.
      *
-     * @return HasOne<Client, $this>
+     * @return HasMany<Client, $this>
      */
-    public function clientRecord(): HasOne
+    public function clientRecords(): HasMany
     {
-        return $this->hasOne(Client::class, 'client_user_id');
+        return $this->hasMany(Client::class, 'client_user_id');
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function clientRecordIds(): array
+    {
+        return array_values(array_map('intval', $this->clientRecords()->pluck('id')->all()));
+    }
+
+    /**
+     * Bookings this user (as a client) has made.
+     *
+     * @return HasMany<Booking, $this>
+     */
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'client_user_id');
+    }
+
+    /**
+     * Bookings received by this trainer.
+     *
+     * @return HasMany<Booking, $this>
+     */
+    public function receivedBookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'trainer_id');
+    }
+
+    /**
+     * Reviews written by this user (as a client).
+     *
+     * @return HasMany<Review, $this>
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'client_user_id');
+    }
+
+    /**
+     * Reviews of this trainer's services.
+     *
+     * @return HasMany<Review, $this>
+     */
+    public function receivedReviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'trainer_id');
     }
 
     public function isTrainer(): bool

@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Mail\InvoiceSentMail;
 use App\Mail\PaymentReceiptMail;
 use App\Models\Invoice;
+use App\Models\Payment;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\DomPDF\PDF as PdfInstance;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
@@ -47,6 +49,20 @@ class InvoiceDocumentService
         Storage::disk('local')->put($path, $pdf->output());
 
         return $path;
+    }
+
+    /**
+     * Render a receipt PDF for a single payment (not persisted).
+     */
+    public function paymentReceipt(Payment $payment): PdfInstance
+    {
+        $payment->loadMissing(['invoice.client', 'invoice.trainer.trainerProfile']);
+
+        return Pdf::loadView('pdf.payment-receipt', [
+            'payment' => $payment,
+            'invoice' => $payment->invoice,
+            'profile' => $payment->invoice->trainer->trainerProfile,
+        ]);
     }
 
     public function emailInvoiceToClient(Invoice $invoice): void

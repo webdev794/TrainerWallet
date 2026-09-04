@@ -45,4 +45,16 @@ class TrainerProfileFactory extends Factory
             'plan_renews_at' => now()->addMonth(),
         ]);
     }
+
+    public function published(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_public' => true,
+            'onboarded_at' => now()->subMonths(2),
+            'slug' => Str::slug((string) ($attributes['business_name'] ?? fake()->unique()->words(2, true))).'-'.fake()->unique()->numberBetween(100, 999),
+            'headline' => 'Strength & conditioning for everyday athletes',
+            'bio' => fake()->paragraph(),
+            'city' => fake()->city(),
+        ]);
+    }
 }

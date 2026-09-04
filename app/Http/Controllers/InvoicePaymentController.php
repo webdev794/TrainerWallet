@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentGatewayType;
+use App\Enums\PaymentStatus;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Services\InvoiceDocumentService;
 use App\Services\Payments\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -84,5 +86,15 @@ class InvoicePaymentController extends Controller
         $this->payments->refundPayment($payment);
 
         return back()->with('status', 'Payment refunded.');
+    }
+
+    public function receipt(Payment $payment, InvoiceDocumentService $documents): \Illuminate\Http\Response
+    {
+        $this->authorize('view', $payment->invoice);
+
+        abort_unless($payment->status === PaymentStatus::Succeeded, 404);
+
+        return $documents->paymentReceipt($payment)
+            ->download("Receipt-{$payment->invoice->number}-{$payment->id}.pdf");
     }
 }

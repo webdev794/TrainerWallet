@@ -452,6 +452,24 @@ export default function InvoiceShow({
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     {payment.status ===
+                                                        'succeeded' && (
+                                                        <Button
+                                                            asChild
+                                                            variant="ghost"
+                                                            size="sm"
+                                                        >
+                                                            <a
+                                                                href={
+                                                                    payments.receipt(
+                                                                        payment.id,
+                                                                    ).url
+                                                                }
+                                                            >
+                                                                Receipt
+                                                            </a>
+                                                        </Button>
+                                                    )}
+                                                    {payment.status ===
                                                         'pending' && (
                                                         <Button
                                                             variant="ghost"

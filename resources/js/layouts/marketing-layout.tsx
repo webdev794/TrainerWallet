@@ -5,6 +5,7 @@ import { AppLogo } from '@/components/app-logo';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-page-props';
 import { dashboard, login, register } from '@/routes';
+import * as trainers from '@/routes/trainers';
 
 export default function MarketingLayout({ children }: PropsWithChildren) {
     const { user } = useAuth();
@@ -18,13 +19,16 @@ export default function MarketingLayout({ children }: PropsWithChildren) {
                     </Link>
 
                     <nav className="text-muted-foreground hidden items-center gap-8 text-sm font-medium md:flex">
-                        <a href="#features" className="hover:text-foreground">
+                        <Link
+                            href={trainers.index().url}
+                            className="hover:text-foreground"
+                        >
+                            Find a trainer
+                        </Link>
+                        <a href="/#features" className="hover:text-foreground">
                             Features
                         </a>
-                        <a href="#how" className="hover:text-foreground">
-                            How it works
-                        </a>
-                        <a href="#pricing" className="hover:text-foreground">
+                        <a href="/#pricing" className="hover:text-foreground">
                             Pricing
                         </a>
                     </nav>

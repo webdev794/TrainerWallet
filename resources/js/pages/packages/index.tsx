@@ -32,21 +32,27 @@ import * as packages from '@/routes/packages';
 type PackageRow = {
     id: number;
     name: string;
+    description: string | null;
     type: string;
     type_label: string;
     amount: string;
     sessions_count: number | null;
     billing_interval: string | null;
+    duration_minutes: number | null;
     is_active: boolean;
+    is_bookable: boolean;
 };
 
 const emptyPackage = {
     name: '',
+    description: '',
     type: 'session',
     amount: '',
     sessions_count: '',
     billing_interval: '',
+    duration_minutes: '60',
     is_active: true,
+    is_bookable: false,
 };
 
 function PackageDialog({
@@ -64,13 +70,18 @@ function PackageDialog({
         if (open) {
             form.setDefaults({
                 name: pkg?.name ?? '',
+                description: pkg?.description ?? '',
                 type: pkg?.type ?? 'session',
                 amount: pkg?.amount ?? '',
                 sessions_count: pkg?.sessions_count
                     ? String(pkg.sessions_count)
                     : '',
                 billing_interval: pkg?.billing_interval ?? '',
+                duration_minutes: pkg?.duration_minutes
+                    ? String(pkg.duration_minutes)
+                    : '60',
                 is_active: pkg?.is_active ?? true,
+                is_bookable: pkg?.is_bookable ?? false,
             });
             form.reset();
             form.clearErrors();
@@ -110,6 +121,21 @@ function PackageDialog({
                             }
                         />
                         <InputError message={form.errors.name} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="description">
+                            Description{' '}
+                            <span className="text-muted-foreground">
+                                (shown on your public page)
+                            </span>
+                        </Label>
+                        <Input
+                            id="description"
+                            value={form.data.description}
+                            onChange={(e) =>
+                                form.setData('description', e.target.value)
+                            }
+                        />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
@@ -187,16 +213,54 @@ function PackageDialog({
                             />
                         </div>
                     )}
-                    <label className="flex items-center gap-2 text-sm">
-                        <input
-                            type="checkbox"
-                            checked={form.data.is_active}
-                            onChange={(e) =>
-                                form.setData('is_active', e.target.checked)
-                            }
-                        />
-                        Active
-                    </label>
+                    {form.data.type === 'session' && (
+                        <div className="space-y-2">
+                            <Label htmlFor="duration_minutes">
+                                Session length (minutes)
+                            </Label>
+                            <Input
+                                id="duration_minutes"
+                                type="number"
+                                min="5"
+                                value={form.data.duration_minutes}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'duration_minutes',
+                                        e.target.value,
+                                    )
+                                }
+                            />
+                            <InputError
+                                message={form.errors.duration_minutes}
+                            />
+                        </div>
+                    )}
+                    <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={form.data.is_active}
+                                onChange={(e) =>
+                                    form.setData('is_active', e.target.checked)
+                                }
+                            />
+                            Active
+                        </label>
+                        <label className="flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                checked={form.data.is_bookable}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'is_bookable',
+                                        e.target.checked,
+                                    )
+                                }
+                            />
+                            Bookable — clients can book this from your public
+                            page
+                        </label>
+                    </div>
                     <DialogFooter>
                         <Button
                             type="button"
@@ -280,17 +344,24 @@ export default function PackagesIndex({
                                                   : '—'}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge
-                                                variant={
-                                                    pkg.is_active
-                                                        ? 'secondary'
-                                                        : 'outline'
-                                                }
-                                            >
-                                                {pkg.is_active
-                                                    ? 'Active'
-                                                    : 'Inactive'}
-                                            </Badge>
+                                            <div className="flex flex-wrap gap-1">
+                                                <Badge
+                                                    variant={
+                                                        pkg.is_active
+                                                            ? 'secondary'
+                                                            : 'outline'
+                                                    }
+                                                >
+                                                    {pkg.is_active
+                                                        ? 'Active'
+                                                        : 'Inactive'}
+                                                </Badge>
+                                                {pkg.is_bookable && (
+                                                    <Badge variant="success">
+                                                        Bookable
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex justify-end gap-1">

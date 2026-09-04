@@ -10,9 +10,13 @@ import { cn } from '@/lib/utils';
 import { logout } from '@/routes';
 
 const links = [
-    { label: 'Invoices', href: '/portal' },
+    { label: 'Dashboard', href: '/portal', exact: true },
+    { label: 'Book', href: '/portal/book' },
+    { label: 'Bookings', href: '/portal/bookings' },
+    { label: 'Invoices', href: '/portal/invoices' },
     { label: 'Sessions', href: '/portal/sessions' },
     { label: 'Receipts', href: '/portal/receipts' },
+    { label: 'Reviews', href: '/portal/reviews' },
 ];
 
 export default function ClientPortalLayout({
@@ -25,22 +29,30 @@ export default function ClientPortalLayout({
     return (
         <div className="bg-muted/30 flex min-h-screen flex-col">
             <header className="bg-background border-b">
-                <div className="mx-auto flex h-16 w-full max-w-4xl items-center justify-between px-4">
-                    <AppLogo />
-                    <nav className="text-muted-foreground flex items-center gap-6 text-sm font-medium">
-                        {links.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className={cn(
-                                    'hover:text-foreground',
-                                    url.startsWith(link.href) &&
-                                        'text-foreground',
-                                )}
-                            >
-                                {link.label}
-                            </Link>
-                        ))}
+                <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-4 px-4">
+                    <Link href="/portal">
+                        <AppLogo />
+                    </Link>
+                    <nav className="text-muted-foreground -mx-2 flex flex-1 items-center gap-4 overflow-x-auto px-2 text-sm font-medium">
+                        {links.map((link) => {
+                            const active = link.exact
+                                ? url === link.href ||
+                                  url.split('?')[0] === link.href
+                                : url.startsWith(link.href);
+
+                            return (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    className={cn(
+                                        'hover:text-foreground whitespace-nowrap',
+                                        active && 'text-foreground',
+                                    )}
+                                >
+                                    {link.label}
+                                </Link>
+                            );
+                        })}
                     </nav>
                     <Button
                         variant="ghost"
@@ -52,7 +64,7 @@ export default function ClientPortalLayout({
                 </div>
             </header>
 
-            <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
+            <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
                 {title && (
                     <h1 className="mb-6 text-2xl font-semibold">{title}</h1>
                 )}

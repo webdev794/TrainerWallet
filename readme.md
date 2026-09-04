@@ -127,7 +127,7 @@ npm run build
 | `/sessions` | `sessions/index` | Month calendar **and** list tabs; log/edit a session; click a day to add one; status dropdown: scheduled / completed / postponed / cancelled / no-show |
 | `/invoices` | `invoices/index` | All invoices, status filter, row → detail |
 | `/invoices/create`, `/invoices/{id}/edit` | `invoices/create` | Invoice builder — client, line items (manual, from a package, or from unbilled completed sessions), discount, tax rate, due date, allowed payment methods, notes; live totals |
-| `/invoices/{id}` | `invoices/show` | Invoice detail — send / resend, download PDF, copy public link, record a manual (cash / UPI) payment, confirm a pending payment, refund, void, delete draft; payment history |
+| `/invoices/{id}` | `invoices/show` | Invoice detail — send / resend, download PDF, copy public link, record a manual (cash / UPI) payment, confirm a pending payment, download a **per-payment PDF receipt**, refund, void, delete draft; payment history |
 | `/recurring` | `recurring/index` | Recurring schedules — create (client, interval, first run, due days, line items, auto-send), pause/resume, generate-now, delete |
 | `/payments` | `payments/index` | Every payment received, with gross / net / fee, method and status; row → invoice |
 | `/reports` | `reports/index` | YTD collected + net tiles, a 6-month revenue area chart (Recharts), outstanding-by-client table, and a **payments CSV export** |
@@ -141,6 +141,7 @@ npm run build
 | `/portal` | `portal/index` | The client's invoices — status, balance, "Pay" / "View" |
 | `/portal/invoices/{id}` | `invoice/public` | Same pay page as the public link, inside the portal shell |
 | `/portal/sessions` | `portal/sessions` | The client's past and upcoming sessions, each with its status and whether a completed session has been invoiced yet |
+| `/portal/receipts` | `portal/receipts` | One row per successful payment; each downloads a PDF receipt (`/portal/receipts/{payment}/download`) |
 
 ### Layouts
 
@@ -192,3 +193,73 @@ Everything runs on **test / sandbox credentials**; going live is an `.env` swap.
 - [ ] Supervisor running `queue:work`; cron running `schedule:run` every minute
 - [ ] `MAIL_MAILER` → a real transactional provider
 - [ ] Database backups for `trainerwallet`
+
+---
+## Client marketplace (Phase 6)
+
+CoachPay is two-sided: trainers can publish a public profile and clients can browse,
+**instant-book** a listed service, and leave **per-service reviews**. A client can be
+connected to several trainers at once.
+
+### Public (no login)
+
+| Route | Page | What it does |
+| --- | --- | --- |
+| `/trainers` | `trainers/index` | Directory of trainers who opted in — search, rating, service count |
+| `/t/{slug}` | `trainers/show` | A trainer's profile — bio, bookable services with prices, reviews, per-service ratings, "Book now" buttons |
+
+### Client portal (new / changed)
+
+| Route | Page | What it does |
+| --- | --- | --- |
+| `/portal` | `portal/index` | **Rebuilt as a progress dashboard** — completed-sessions bar chart (6 months), sessions-completed / this-month / week-streak / invoices-to-pay tiles, next session, "Book a session" + "Browse trainers" |
+| `/portal/invoices` | `portal/invoices` | The invoice list (moved off the dashboard) — now also shows the trainer per invoice |
+| `/portal/book` | `portal/book` | Instant booking — pick trainer → service → (if a single session) date/time → an invoice is generated and you're sent to the pay page. Deep-linkable: `/portal/book?trainer={slug}&package={id}` |
+| `/portal/bookings` | `portal/bookings` | Booking history with invoice status; cancel a confirmed booking |
+| `/portal/reviews` | `portal/reviews` | Rate a booked service (stars + "what went well" + "how to improve"); edit / delete your reviews |
+
+### Trainer app (new)
+
+| Route | Page | What it does |
+| --- | --- | --- |
+| `/bookings` | `bookings/index` | Bookings received from the public profile; mark done / cancel (syncs the linked session) |
+| `/reviews` | `reviews/index` | Overall rating, per-service breakdown, and the full review feed with improvement notes |
+
+### Trainer settings / packages
+
+- **Settings** gains a *Marketplace profile* card — a public toggle (auto-generates a URL
+  slug the first time it's switched on), headline, bio, city, and the public page link.
+- **Packages** gains *Description*, *Session length*, and a **Bookable** toggle — only
+  bookable + active packages appear on the public page and in the booking flow.
+
+### How instant-book works
+
+`App\Services\BookingService::book()` runs in one transaction: find-or-create the client
+record for that trainer, create a scheduled `TrainingSession` (session-type services only),
+create a **sent** `Invoice` with the service as a line item, materialise its reminder
+schedule, and record the `Booking`. The invoice email goes out and the client lands on the
+public pay page.
+
+`App\Services\ReviewService` upserts one review per client per service and recomputes the
+trainer's `rating_avg` / `rating_count` on every write.
+
+### Demo marketplace data
+
+`migrate:fresh --seed` now also: makes **Priya Sharma Strength** public
+(`/t/priya-sharma-strength`) with 3 bookable packages; adds a **second public trainer**
+`rahul@coachpay.test` / `password` (`/t/rahul-verma-performance`); and seeds a completed
+booking + a 5-star review from the demo client.
+
+### Data model additions
+
+`trainer_profiles` +`is_public`, `slug`, `headline`, `bio`, `city`, `rating_avg`,
+`rating_count`. `packages` +`description`, `is_bookable`, `duration_minutes`. New
+`bookings` and `reviews` tables. `User::clientRecord()` (hasOne) became
+`clientRecords()` (hasMany) so a client can hold a record per trainer.
+
+**Tests:** 112 Pest tests green (19 for the marketplace). PHPStan L7, Pint, ESLint, tsc,
+and the Vite build all clean.
+
+*****
+Continue the CoachPay build. Read `C:\Users\Intel\.claude\projects\d--laravel\memory\coachpay-build.md` + `coachpay-dev-environment.md` first. Use `D:\xampp8-2-12\php84\php.exe` (not the 8.2 on PATH); route temp to `D:\laravel\tmp`; start MySQL via `D:\xampp8-2-12\mysql_start.bat` if `migrate` can't connect. Phases 1-6 are done and green (112 Pest tests) — run the quality gates (`php artisan test --compact`, `vendor/bin/pint`, `phpstan`, `npm run check`, `npm run build`) to confirm, then tell me what's next. Work autonomously; keep approving your own bash commands inside `D:\laravel`.
+*****

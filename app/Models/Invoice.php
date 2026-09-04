@@ -41,6 +41,7 @@ use Illuminate\Support\Str;
  * @property-read User $trainer
  * @property-read Collection<int, InvoiceItem> $items
  * @property-read Collection<int, Payment> $payments
+ * @property-read int|null $items_count
  */
 class Invoice extends Model
 {

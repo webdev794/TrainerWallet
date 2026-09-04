@@ -35,4 +35,14 @@ class PackageFactory extends Factory
     {
         return $this->state(fn (array $attributes) => ['is_active' => false]);
     }
+
+    public function bookable(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_bookable' => true,
+            'is_active' => true,
+            'description' => 'A focused one-on-one session tailored to your goals.',
+            'duration_minutes' => 60,
+        ]);
+    }
 }

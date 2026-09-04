@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     Boxes,
+    CalendarCheck,
     CalendarDays,
     CreditCard,
     FileText,
@@ -10,6 +11,7 @@ import {
     Repeat,
     Settings,
     Sparkles,
+    Star,
     Users,
     Wallet,
 } from 'lucide-react';
@@ -44,11 +46,13 @@ const navItems: NavItem[] = [
     { label: 'Dashboard', href: dashboard.url(), icon: LayoutDashboard },
     { label: 'Clients', href: '/clients', icon: Users },
     { label: 'Sessions', href: '/sessions', icon: CalendarDays },
+    { label: 'Bookings', href: '/bookings', icon: CalendarCheck },
     { label: 'Packages', href: '/packages', icon: Boxes },
     { label: 'Invoices', href: '/invoices', icon: FileText },
     { label: 'Recurring', href: '/recurring', icon: Repeat },
     { label: 'Payments', href: '/payments', icon: CreditCard },
     { label: 'Reports', href: '/reports', icon: Wallet },
+    { label: 'Reviews', href: '/reviews', icon: Star },
     { label: 'Billing', href: '/billing', icon: Sparkles },
     { label: 'Settings', href: '/settings', icon: Settings },
 ];

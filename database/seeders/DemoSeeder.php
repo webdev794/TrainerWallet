@@ -2,11 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentGatewayType;
 use App\Enums\PaymentStatus;
 use App\Enums\SessionStatus;
 use App\Enums\UserRole;
+use App\Models\Booking;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Package;
@@ -14,6 +16,7 @@ use App\Models\RecurringInvoice;
 use App\Models\TrainingSession;
 use App\Models\User;
 use App\Services\InvoiceReminderService;
+use App\Services\ReviewService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
@@ -40,12 +43,31 @@ class DemoSeeder extends Seeder
             'plan' => 'pro',
             'plan_renews_at' => CarbonImmutable::now()->addMonth(),
             'onboarded_at' => CarbonImmutable::now()->subMonths(3),
+            'is_public' => true,
+            'slug' => 'priya-sharma-strength',
+            'headline' => 'Strength & conditioning for everyday athletes',
+            'bio' => 'Fifteen years coaching lifters of every level. Sessions are structured, '
+                .'progressive and built around your goals — whether that is a first pull-up or a '
+                .'competitive total.',
+            'city' => 'Bengaluru',
         ]);
 
         $packages = collect([
-            ['name' => 'Single session', 'type' => 'session', 'amount' => 1200],
-            ['name' => '10-session pack', 'type' => 'package', 'amount' => 10000, 'sessions_count' => 10],
-            ['name' => 'Monthly unlimited', 'type' => 'monthly', 'amount' => 8000, 'billing_interval' => 'month'],
+            [
+                'name' => 'Single session', 'type' => 'session', 'amount' => 1200,
+                'duration_minutes' => 60, 'is_bookable' => true,
+                'description' => 'One focused 60-minute one-on-one session tailored to your goals.',
+            ],
+            [
+                'name' => '10-session pack', 'type' => 'package', 'amount' => 10000, 'sessions_count' => 10,
+                'is_bookable' => true,
+                'description' => 'Ten sessions to book at your own pace — the best value per session.',
+            ],
+            [
+                'name' => 'Monthly unlimited', 'type' => 'monthly', 'amount' => 8000, 'billing_interval' => 'month',
+                'is_bookable' => true,
+                'description' => 'Unlimited sessions each month plus a programme you keep between them.',
+            ],
         ])->map(fn (array $data) => Package::create([...$data, 'trainer_id' => $trainer->id]));
 
         $clients = collect([
@@ -138,8 +160,78 @@ class DemoSeeder extends Seeder
             'auto_send' => true,
         ]);
 
+        // The invoices above were numbered by hand — advance the counter past them
+        // so freshly issued invoices (bookings, recurring) don't collide.
+        $maxNumber = $trainer->invoices()->pluck('number')
+            ->map(fn (string $number): int => (int) Str::afterLast($number, '-'))
+            ->max();
+        $trainer->trainerProfile->update(['next_invoice_number' => ($maxNumber ?? 0) + 1]);
+
+        // Marketplace: bookings + reviews from the demo client against Priya's services.
+        $reviewService = app(ReviewService::class);
+
+        Booking::create([
+            'client_user_id' => $clientUser->id,
+            'trainer_id' => $trainer->id,
+            'package_id' => $packages[0]->id,
+            'client_id' => $clients->first()->id,
+            'invoice_id' => $clients->first()->invoices()->first()?->id,
+            'service_name' => $packages[0]->name,
+            'amount' => $packages[0]->amount,
+            'currency' => 'INR',
+            'scheduled_at' => CarbonImmutable::now()->subDays(9),
+            'status' => BookingStatus::Completed,
+        ]);
+        Booking::create([
+            'client_user_id' => $clientUser->id,
+            'trainer_id' => $trainer->id,
+            'package_id' => $packages[2]->id,
+            'client_id' => $clients->first()->id,
+            'service_name' => $packages[2]->name,
+            'amount' => $packages[2]->amount,
+            'currency' => 'INR',
+            'scheduled_at' => null,
+            'status' => BookingStatus::Confirmed,
+        ]);
+
+        $reviewService->upsert($clientUser, $packages[0], 5, 'Great structure, always leave with clear next steps.', 'Maybe a touch more mobility work at the start.');
+
+        // A second public trainer so the directory has more than one entry.
+        $rahul = User::factory()->create([
+            'name' => 'Rahul Verma',
+            'email' => 'rahul@coachpay.test',
+            'password' => Hash::make('password'),
+            'role' => UserRole::Trainer,
+        ]);
+        $rahul->trainerProfile()->create([
+            'business_name' => 'Rahul Verma Performance',
+            'currency' => 'INR',
+            'upi_vpa' => 'rahul@okaxis',
+            'invoice_prefix' => 'RVP',
+            'next_invoice_number' => 1,
+            'plan' => 'free',
+            'onboarded_at' => CarbonImmutable::now()->subMonths(1),
+            'is_public' => true,
+            'slug' => 'rahul-verma-performance',
+            'headline' => 'Endurance & mobility coaching for runners',
+            'bio' => 'Former state-level 5k runner. I help recreational runners get faster and stay '
+                .'injury-free with smart programming and gait work.',
+            'city' => 'Pune',
+        ]);
+        Package::create([
+            'trainer_id' => $rahul->id, 'name' => 'Running assessment', 'type' => 'session',
+            'amount' => 1500, 'duration_minutes' => 75, 'is_bookable' => true, 'is_active' => true,
+            'description' => 'Video gait analysis and a personalised drill set.',
+        ]);
+        Package::create([
+            'trainer_id' => $rahul->id, 'name' => 'Race-prep block', 'type' => 'package',
+            'amount' => 12000, 'sessions_count' => 8, 'is_bookable' => true, 'is_active' => true,
+            'description' => 'Eight sessions across an eight-week build to your goal race.',
+        ]);
+
         $this->command->info('Demo trainer: trainer@coachpay.test / password');
         $this->command->info('Demo client:  client@coachpay.test  / password');
+        $this->command->info('2nd trainer:  rahul@coachpay.test   / password');
     }
 
     /**

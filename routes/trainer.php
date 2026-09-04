@@ -12,6 +12,8 @@ use App\Http\Controllers\RecurringInvoiceController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StripeConnectController;
+use App\Http\Controllers\TrainerBookingController;
+use App\Http\Controllers\TrainerReviewController;
 use App\Http\Controllers\TrainingSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,6 +51,7 @@ Route::middleware(['auth', 'verified', 'role:trainer', 'onboarded'])->group(func
     Route::post('/invoices/{invoice}/payments', [InvoicePaymentController::class, 'store'])->name('invoices.payments.store');
     Route::post('/payments/{payment}/confirm', [InvoicePaymentController::class, 'confirm'])->name('payments.confirm');
     Route::post('/payments/{payment}/refund', [InvoicePaymentController::class, 'refund'])->name('payments.refund');
+    Route::get('/payments/{payment}/receipt', [InvoicePaymentController::class, 'receipt'])->name('payments.receipt');
     Route::get('/payments', [InvoicePaymentController::class, 'index'])->name('payments.index');
 
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
@@ -61,6 +64,11 @@ Route::middleware(['auth', 'verified', 'role:trainer', 'onboarded'])->group(func
     Route::put('/recurring/{recurring}', [RecurringInvoiceController::class, 'update'])->name('recurring.update');
     Route::delete('/recurring/{recurring}', [RecurringInvoiceController::class, 'destroy'])->name('recurring.destroy');
     Route::post('/recurring/{recurring}/run', [RecurringInvoiceController::class, 'runNow'])->name('recurring.run');
+
+    Route::get('/bookings', [TrainerBookingController::class, 'index'])->name('bookings.index');
+    Route::put('/bookings/{booking}', [TrainerBookingController::class, 'update'])->name('bookings.update');
+
+    Route::get('/reviews', [TrainerReviewController::class, 'index'])->name('reviews.index');
 
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
     Route::get('/reports/payments.csv', [ReportsController::class, 'exportPayments'])->name('reports.payments.csv');

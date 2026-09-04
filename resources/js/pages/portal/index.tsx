@@ -1,145 +1,207 @@
 import { Head, Link } from '@inertiajs/react';
-
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
+    CalendarClock,
+    CheckCircle2,
+    Flame,
+    Receipt,
+    Sparkles,
+} from 'lucide-react';
+import { type ComponentType } from 'react';
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
+
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ClientPortalLayout from '@/layouts/client-portal-layout';
-import { formatDate, formatMoney } from '@/lib/format';
-import * as portalInvoices from '@/routes/portal/invoices';
+import { formatDateTime } from '@/lib/format';
+import * as portal from '@/routes/portal';
+import * as trainers from '@/routes/trainers';
 
-type InvoiceRow = {
-    id: number;
-    number: string;
-    status: string;
-    status_label: string;
-    total: string;
-    outstanding: number;
-    currency: string;
-    due_date: string | null;
+type Props = {
+    linked: boolean;
+    stats: {
+        completed_total: number;
+        completed_this_month: number;
+        streak_weeks: number;
+        open_invoices: number;
+    };
+    series: { month: string; sessions: number }[];
+    nextSession: {
+        scheduled_at: string;
+        duration_minutes: number;
+        trainer_name: string;
+    } | null;
 };
 
-const variant: Record<
-    string,
-    'secondary' | 'success' | 'warning' | 'outline' | 'destructive'
-> = {
-    sent: 'secondary',
-    viewed: 'secondary',
-    partially_paid: 'warning',
-    paid: 'success',
-    overdue: 'destructive',
-    void: 'outline',
-};
+export default function PortalDashboard({
+    linked,
+    stats,
+    series,
+    nextSession,
+}: Props) {
+    const cards: {
+        label: string;
+        value: string;
+        icon: ComponentType<{ className?: string }>;
+    }[] = [
+        {
+            label: 'Sessions completed',
+            value: String(stats.completed_total),
+            icon: CheckCircle2,
+        },
+        {
+            label: 'This month',
+            value: String(stats.completed_this_month),
+            icon: Sparkles,
+        },
+        {
+            label: 'Week streak',
+            value: String(stats.streak_weeks),
+            icon: Flame,
+        },
+        {
+            label: 'Invoices to pay',
+            value: String(stats.open_invoices),
+            icon: Receipt,
+        },
+    ];
 
-export default function PortalIndex({
-    invoices,
-    linked = true,
-}: {
-    invoices: InvoiceRow[];
-    linked?: boolean;
-}) {
     return (
-        <ClientPortalLayout title="Your invoices">
-            <Head title="Invoices" />
+        <ClientPortalLayout title="Your progress">
+            <Head title="Dashboard" />
 
             {!linked && (
-                <Card className="mb-4">
+                <Card className="mb-6">
                     <CardContent className="text-muted-foreground py-6 text-center text-sm">
-                        Your account isn&rsquo;t linked to a trainer yet. Ask
-                        your trainer to add you as a client using this email
-                        address, and your invoices will appear here.
+                        You&rsquo;re not connected to a trainer yet.{' '}
+                        <Link
+                            href={trainers.index().url}
+                            className="text-foreground font-medium underline"
+                        >
+                            Find one
+                        </Link>{' '}
+                        and book your first session.
                     </CardContent>
                 </Card>
             )}
 
-            <Card>
-                <CardContent className="p-0">
-                    {invoices.length === 0 ? (
-                        <p className="text-muted-foreground p-10 text-center text-sm">
-                            You have no invoices yet.
-                        </p>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Invoice</TableHead>
-                                    <TableHead>Due</TableHead>
-                                    <TableHead>Total</TableHead>
-                                    <TableHead>Balance</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {invoices.map((invoice) => (
-                                    <TableRow key={invoice.id}>
-                                        <TableCell className="font-medium">
-                                            {invoice.number}
-                                        </TableCell>
-                                        <TableCell className="text-muted-foreground">
-                                            {invoice.due_date
-                                                ? formatDate(invoice.due_date)
-                                                : '—'}
-                                        </TableCell>
-                                        <TableCell>
-                                            {formatMoney(
-                                                invoice.total,
-                                                invoice.currency,
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            {formatMoney(
-                                                invoice.outstanding,
-                                                invoice.currency,
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant={
-                                                    variant[invoice.status] ??
-                                                    'secondary'
-                                                }
-                                            >
-                                                {invoice.status_label}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <Button
-                                                asChild
-                                                size="sm"
-                                                variant={
-                                                    invoice.outstanding > 0
-                                                        ? 'default'
-                                                        : 'outline'
-                                                }
-                                            >
-                                                <Link
-                                                    href={
-                                                        portalInvoices.show(
-                                                            invoice.id,
-                                                        ).url
-                                                    }
-                                                >
-                                                    {invoice.outstanding > 0
-                                                        ? 'Pay'
-                                                        : 'View'}
-                                                </Link>
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    )}
-                </CardContent>
-            </Card>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {cards.map((card) => (
+                    <Card key={card.label}>
+                        <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-muted-foreground text-sm font-medium">
+                                {card.label}
+                            </CardTitle>
+                            <card.icon className="text-muted-foreground size-4" />
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-2xl font-bold">{card.value}</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-3">
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Completed sessions</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-60 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={series}>
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        stroke="var(--color-border)"
+                                        vertical={false}
+                                    />
+                                    <XAxis
+                                        dataKey="month"
+                                        stroke="var(--color-muted-foreground)"
+                                        fontSize={12}
+                                    />
+                                    <YAxis
+                                        allowDecimals={false}
+                                        stroke="var(--color-muted-foreground)"
+                                        fontSize={12}
+                                        width={28}
+                                    />
+                                    <Tooltip
+                                        cursor={{
+                                            fill: 'var(--color-muted)',
+                                            opacity: 0.4,
+                                        }}
+                                        contentStyle={{
+                                            background: 'var(--color-card)',
+                                            border: '1px solid var(--color-border)',
+                                            borderRadius: 8,
+                                            fontSize: 12,
+                                        }}
+                                    />
+                                    <Bar
+                                        dataKey="sessions"
+                                        fill="var(--color-primary)"
+                                        radius={[4, 4, 0, 0]}
+                                        maxBarSize={44}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <CalendarClock className="size-4" /> Next
+                                session
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-sm">
+                            {nextSession ? (
+                                <>
+                                    <p className="text-lg font-semibold">
+                                        {formatDateTime(
+                                            nextSession.scheduled_at,
+                                        )}
+                                    </p>
+                                    <p className="text-muted-foreground">
+                                        {nextSession.duration_minutes} min with{' '}
+                                        {nextSession.trainer_name}
+                                    </p>
+                                </>
+                            ) : (
+                                <p className="text-muted-foreground">
+                                    Nothing scheduled.
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardContent className="flex flex-col gap-2 py-6">
+                            <Button asChild>
+                                <Link href={portal.book().url}>
+                                    Book a session
+                                </Link>
+                            </Button>
+                            <Button asChild variant="outline">
+                                <Link href={trainers.index().url}>
+                                    Browse trainers
+                                </Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
         </ClientPortalLayout>
     );
 }

@@ -25,6 +25,14 @@ type Profile = {
     stripe_connect_status: string | null;
     stripe_connected: boolean;
     paypal_merchant_id: string | null;
+    is_public: boolean;
+    slug: string | null;
+    headline: string | null;
+    bio: string | null;
+    city: string | null;
+    rating_avg: string;
+    rating_count: number;
+    public_url: string | null;
 };
 
 export default function SettingsIndex({
@@ -45,6 +53,10 @@ export default function SettingsIndex({
         tax_id: string;
         paypal_merchant_id: string;
         logo: File | null;
+        is_public: boolean;
+        headline: string;
+        bio: string;
+        city: string;
     }>({
         business_name: profile.business_name,
         currency: profile.currency,
@@ -54,6 +66,10 @@ export default function SettingsIndex({
         tax_id: profile.tax_id ?? '',
         paypal_merchant_id: profile.paypal_merchant_id ?? '',
         logo: null,
+        is_public: profile.is_public,
+        headline: profile.headline ?? '',
+        bio: profile.bio ?? '',
+        city: profile.city ?? '',
     });
 
     const submit = (event: FormEvent) => {
@@ -205,6 +221,90 @@ export default function SettingsIndex({
                                     message={form.errors.paypal_merchant_id}
                                 />
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Marketplace profile</CardTitle>
+                            <p className="text-muted-foreground text-sm">
+                                List yourself in the public trainer directory so
+                                clients can find and book you.
+                            </p>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <label className="flex items-center gap-2 text-sm">
+                                <input
+                                    type="checkbox"
+                                    checked={form.data.is_public}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'is_public',
+                                            e.target.checked,
+                                        )
+                                    }
+                                />
+                                Show my profile in the directory
+                            </label>
+
+                            {profile.public_url && (
+                                <p className="text-muted-foreground text-xs">
+                                    Public page:{' '}
+                                    <a
+                                        href={profile.public_url}
+                                        target="_blank"
+                                        className="text-primary underline"
+                                    >
+                                        {profile.public_url}
+                                    </a>
+                                </p>
+                            )}
+
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div className="space-y-2 sm:col-span-2">
+                                    <Label htmlFor="headline">Headline</Label>
+                                    <Input
+                                        id="headline"
+                                        placeholder="Strength coaching for busy professionals"
+                                        value={form.data.headline}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                'headline',
+                                                e.target.value,
+                                            )
+                                        }
+                                    />
+                                    <InputError
+                                        message={form.errors.headline}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="city">City</Label>
+                                    <Input
+                                        id="city"
+                                        value={form.data.city}
+                                        onChange={(e) =>
+                                            form.setData('city', e.target.value)
+                                        }
+                                    />
+                                </div>
+                                <div className="space-y-2 sm:col-span-2">
+                                    <Label htmlFor="bio">Bio</Label>
+                                    <Textarea
+                                        id="bio"
+                                        value={form.data.bio}
+                                        onChange={(e) =>
+                                            form.setData('bio', e.target.value)
+                                        }
+                                    />
+                                    <InputError message={form.errors.bio} />
+                                </div>
+                            </div>
+                            <p className="text-muted-foreground text-xs">
+                                Only packages marked <strong>bookable</strong>{' '}
+                                on the Packages screen appear on your public
+                                page.
+                            </p>
                         </CardContent>
                     </Card>
 

@@ -12,10 +12,10 @@ class PortalSessionController extends Controller
 {
     public function index(Request $request): Response
     {
-        $clientRecord = $request->user()->clientRecord;
+        $clientIds = $request->user()->clientRecordIds();
 
-        $sessions = $clientRecord === null ? collect() : TrainingSession::query()
-            ->where('client_id', $clientRecord->id)
+        $sessions = $clientIds === [] ? collect() : TrainingSession::query()
+            ->whereIn('client_id', $clientIds)
             ->with('trainer:id,name')
             ->orderByDesc('scheduled_at')
             ->limit(100)
